@@ -1,7 +1,7 @@
 import React from 'react';
 import { twMerge } from 'tailwind-merge';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonOwnProps {
   variant?: 'primary' | 'secondary' | 'outline' | 'danger';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
@@ -9,7 +9,12 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   iconPosition?: 'left' | 'right';
 }
 
-const Button: React.FC<ButtonProps> = ({
+type PolymorphicButtonProps<C extends React.ElementType> = 
+  ButtonOwnProps & Omit<React.ComponentPropsWithoutRef<C>, keyof ButtonOwnProps> & {
+    as?: C;
+  };
+
+const Button = <C extends React.ElementType = 'button'>({
   children,
   variant = 'primary',
   size = 'md',
@@ -18,17 +23,20 @@ const Button: React.FC<ButtonProps> = ({
   icon,
   iconPosition = 'left',
   disabled,
+  as,
   ...props
-}) => {
+}: PolymorphicButtonProps<C>) => {
+  const Component = as || 'button';
+
   const baseClasses = 'btn';
-  
+
   const variantClasses = {
     primary: 'btn-primary',
     secondary: 'btn-secondary',
     outline: 'btn-outline',
     danger: 'btn-danger',
   };
-  
+
   const sizeClasses = {
     sm: 'text-xs py-1.5 px-3',
     md: 'text-sm py-2 px-4',
@@ -44,23 +52,23 @@ const Button: React.FC<ButtonProps> = ({
   );
 
   return (
-    <button 
-      disabled={disabled || isLoading} 
-      className={classes} 
-      {...props}
+    <Component
+      className={classes}
+      disabled={Component === 'button' ? (disabled || isLoading) : undefined}
+      {...(props as any)}
     >
       {isLoading ? (
         <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
       ) : icon && iconPosition === 'left' ? (
         <span className="mr-2">{icon}</span>
       ) : null}
-      
+
       {children}
-      
+
       {!isLoading && icon && iconPosition === 'right' && (
         <span className="ml-2">{icon}</span>
       )}
-    </button>
+    </Component>
   );
 };
 
